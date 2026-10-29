@@ -56,3 +56,4 @@ where $\theta$ represents online Q-network parameters and $\theta^-$ represents 
 ---
 
 ## 3. Codebase Architecture & File Responsibilities
+The codebase is structured modularly to decouple game physics, model training, policy evaluation, and global hyperparameter settings.
