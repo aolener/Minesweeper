@@ -1,6 +1,15 @@
 # Minesweeper
 An engine that plays minesweeper using RL techniques
 
+## System Architecture
+
+This project models Minesweeper as a Markov Decision Process (MDP) designed for deep reinforcement learning algorithms. 
+
+For complete design details, consult the [Architecture Overview](architecture_overview.md), which covers:
+* **MDP Formalization:** State representation, reward scaling, and action masking dynamics.
+* **Spatial Feature Engine:** 11-channel state tensor configuration ($(11 \times H \times W)$) encoding number counts, unrevealed tiles, and flags.
+* **Modular Codebase:** Breakdown of environment logic, CNN model architecture, training loops, and evaluation pipelines.
+
 ## Setup & Authentication
 
 This repository requires authentication via GitHub. Password authentication is not supported.
