@@ -1,6 +1,6 @@
-# Minesweeper RL: System Architecture & MDP Overview
+# Minesweeper RL: System Architecture & MDP Overview (DQN)
 
-This document outlines the formal Markov Decision Process (MDP) formulation, state space tensor geometry, action masking mechanics, and software component responsibilities for training a Reinforcement Learning (RL) agent to play Minesweeper.
+This document outlines the formal Markov Decision Process (MDP) formulation, spatial tensor geometry, masked Q-learning mechanics, and software component responsibilities for training a Deep Q-Network (DQN) agent to play Minesweeper.
 
 ---
 
@@ -17,7 +17,7 @@ The observation state $s_t \in \mathbb{R}^{11 \times H \times W}$ is an 11-chann
 | **Channel 9** | Binary mask for unrevealed / covered tiles ($1$ = covered, $0$ = revealed). |
 | **Channel 10** | Binary mask for flagged tiles ($1$ = flagged, $0$ = unflagged). |
 
-*Note: One-hot state encoding prevents artificial linear bias between categorical states (e.g., preventing the network from treating an unrevealed tile as numerically between a 1 and a 2).*
+*Note: One-hot state encoding prevents artificial linear numerical bias between categorical tile states.*
 
 ### Action Space ($\mathcal{A}$)
 * **Type:** Discrete space of size $|\mathcal{A}| = H \times W$.
@@ -25,14 +25,13 @@ The observation state $s_t \in \mathbb{R}^{11 \times H \times W}$ is an 11-chann
   * **Target cell is Covered:** Executes a standard **Reveal** action (with first-click mine safety).
   * **Target cell is Revealed ($1 \le k \le 8$):** Executes a **Chord** action (auto-opens adjacent unflagged tiles if surrounding flag count equals $k$).
 
-### Action Masking ($\mathcal{M}$)
-To prevent invalid or redundant moves, a binary action mask $M_t \in \{0, 1\}^{H \times W}$ is computed at each timestep. Masked actions receive an additive logit penalty of $-\infty$ prior to policy sampling:
+### Action Masked Q-Selection ($\mathcal{M}$)
+To prevent illegal moves during Q-value selection, a binary action mask $M_t \in \{0, 1\}^{H \times W}$ is calculated at each step. Invalid actions ($M(s, a) = 0$) are assigned a $Q$-value of $-\infty$:
 
-$$M(r, c) = \begin{cases} 
-1 & \text{if tile } (r, c) \text{ is covered (valid reveal)} \\
-1 & \text{if tile } (r, c) \text{ is revealed with number } k \text{ AND } \text{flags}_{\text{neighbors}} = k \\
-0 & \text{otherwise (illegal move)}
-\end{cases}$$
+$$\hat{Q}(s, a) = \begin{cases} Q(s, a) & \text{if } M(s, a) = 1 \\ -\infty & \text{if } M(s, a) = 0 \end{cases}$$
+
+* **Exploitation Action:** $a_t = \arg\max_{a} \hat{Q}(s_t, a)$
+* **$\epsilon$-Greedy Exploration:** Action $a_t$ is sampled uniformly at random strictly from valid mask indices $\{a \mid M(s, a) = 1\}$.
 
 ### Reward Function ($\mathcal{R}$)
 Dense step-wise feedback balances standard safe reveals and risky guesses:
@@ -45,6 +44,15 @@ $$R_t = \begin{cases}
 
 ---
 
-## 2. Codebase Architecture & File Responsibilities
+## 2. DQN Training & Loss Mechanics
 
-The codebase is structured modularly to decouple game physics, model training, policy evaluation, and global hyperparameter settings.
+### Bellman Target Equation (Double DQN)
+To reduce Q-value overestimation bias inherent under partial observability, Double DQN is used for parameter updates:
+
+$$Y_t = R_{t+1} + \gamma \cdot Q\left(s_{t+1}, \arg\max_a \hat{Q}(s_{t+1}, a; \theta); \theta^-\right)$$
+
+where $\theta$ represents online Q-network parameters and $\theta^-$ represents periodically synchronized target network parameters.
+
+---
+
+## 3. Codebase Architecture & File Responsibilities
