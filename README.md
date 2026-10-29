@@ -7,7 +7,7 @@ This project models Minesweeper as a Markov Decision Process (MDP) designed for 
 
 For complete design details, consult the [Architecture Overview](architecture_overview.md), which covers:
 * **MDP Formalization:** State representation, reward scaling, and action masking dynamics.
-* **Spatial Feature Engine:** 11-channel state tensor configuration ($(11 \times H \times W)$) encoding number counts, unrevealed tiles, and flags.
+* **Spatial Feature Engine:** 11-channel state tensor configuration `(11 × H × W)` encoding number counts, unrevealed tiles, and flags.
 * **Modular Codebase:** Breakdown of environment logic, CNN model architecture, training loops, and evaluation pipelines.
 
 ## Setup & Authentication
