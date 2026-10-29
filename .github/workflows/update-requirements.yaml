@@ -1,0 +1,39 @@
+name: Auto-Update Requirements
+
+on:
+  push:
+    branches:
+      - main  # Change this to your default branch name if it is 'master'
+    paths:
+      - '**/*.py'  # The workflow ONLY triggers if a Python file changes
+
+jobs:
+  update-requirements:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Gives the runner permission to commit back to your repo
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pipreqs
+        run: pip install pipreqs
+
+      - name: Generate requirements.txt based on imports
+        run: |
+          # --ignore build,bin tells pipreqs to skip your C++ compilation folders
+          # --force overwrites the existing requirements.txt file cleanly
+          pipreqs . --force --ignore build,bin
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: auto-update requirements.txt [skip ci]'
+          file_pattern: 'requirements.txt'
