@@ -57,3 +57,47 @@ where $\theta$ represents online Q-network parameters and $\theta^-$ represents 
 
 ## 3. Codebase Architecture & File Responsibilities
 The codebase is structured modularly to decouple game physics, model training, policy evaluation, and global hyperparameter settings.
+
+minesweeper-rl/
+├── architecture_overview.md  # System MDP design & DQN architectural specs
+├── config.py                 # Global hyperparameters (learning rate, buffer size, gamma, epsilon decay)
+├── evaluate.py               # Evaluation loops and win-rate analytics
+├── minesweeper_env.py        # Custom Gymnasium environment implementation
+├── model.py                  # PyTorch Deep Q-Network CNN architecture
+├── requirements.txt          # Python environment dependencies
+└── train.py                  # Replay buffer management, DQN loss update, and target net syncing
+
+### Modular File Definitions
+
+#### `minesweeper_env.py`
+* **Domain:** Custom Gymnasium Environment (`MinesweeperEnv`).
+* **Responsibilities:**
+  * Tracks internal solution layout (`board`), visible state (`visible`), and flags (`flags`).
+  * Implements first-click safety mine generation.
+  * Handles recursive zero-cascade flood fills (BFS queue) when revealing empty $0$ tiles.
+  * Resolves chord mechanics and surrounding tile reveals.
+  * Generates $11 \times H \times W$ observation tensors and computes `action_masks()`.
+
+#### `model.py`
+* **Domain:** Q-Network Architecture.
+* **Responsibilities:**
+  * Fully Convolutional Network (FCN) mapping $(11, H, W) \to Q(s) \in \mathbb{R}^{H \times W}$.
+  * Preserves spatial dimensions using $3 \times 3$ padded convolutions with $1 \times 1$ conv final output layer.
+
+#### `config.py`
+* **Domain:** Hyperparameters.
+* **Responsibilities:**
+  * Replay buffer capacity (e.g., $100,000$ transitions), mini-batch size (e.g., $64$ or $128$), discount factor $\gamma = 0.99$, learning rate $\alpha$, $\epsilon$-decay schedule, and target network update frequency ($\tau$).
+
+#### `train.py`
+* **Domain:** DQN Training Pipeline.
+* **Responsibilities:**
+  * Manages Experience Replay Buffer $\mathcal{D} = \{(s_t, a_t, r_t, s_{t+1}, d_t, M_{t+1})\}$.
+  * Runs $\epsilon$-greedy action selection with valid masking.
+  * Computes Huber loss (Smooth L1 Loss) between predicted $Q(s, a)$ and Double DQN targets $Y_t$.
+  * Syncs target network weights ($\theta^- \leftarrow \theta$) and logs metrics to TensorBoard.
+
+#### `evaluate.py`
+* **Domain:** Benchmarking.
+* **Responsibilities:**
+  * Runs deterministic evaluation ($\epsilon = 0.0$) across test boards to record win rates and step efficiency.
